@@ -15,8 +15,23 @@ import { request as httpsRequest } from 'https';
 import { request as httpRequest, RequestOptions } from 'http';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 
+import { readFileSync } from 'fs';
+import { homedir } from 'os';
+import { join } from 'path';
+
 import { readEnvFile } from './env.js';
 import { logger } from './logger.js';
+
+/** Read primaryApiKey from ~/.claude.json if present (console/platform login). */
+function readClaudeJsonApiKey(): string | undefined {
+  try {
+    const raw = readFileSync(join(homedir(), '.claude.json'), 'utf-8');
+    const parsed = JSON.parse(raw);
+    return parsed.primaryApiKey || undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 // Create proxy agent for upstream HTTPS requests if proxy env vars are set
 const envProxyUrl =
@@ -45,7 +60,8 @@ export function startCredentialProxy(
     'ANTHROPIC_BASE_URL',
   ]);
 
-  const authMode: AuthMode = secrets.ANTHROPIC_API_KEY ? 'api-key' : 'oauth';
+  const apiKey = secrets.ANTHROPIC_API_KEY || readClaudeJsonApiKey();
+  const authMode: AuthMode = apiKey ? 'api-key' : 'oauth';
   const oauthToken =
     secrets.CLAUDE_CODE_OAUTH_TOKEN || secrets.ANTHROPIC_AUTH_TOKEN;
 
@@ -76,7 +92,7 @@ export function startCredentialProxy(
         if (authMode === 'api-key') {
           // API key mode: inject x-api-key on every request
           delete headers['x-api-key'];
-          headers['x-api-key'] = secrets.ANTHROPIC_API_KEY;
+          headers['x-api-key'] = apiKey;
         } else {
           // OAuth mode: replace placeholder Bearer token with the real one
           // only when the container actually sends an Authorization header
@@ -133,5 +149,5 @@ export function startCredentialProxy(
 /** Detect which auth mode the host is configured for. */
 export function detectAuthMode(): AuthMode {
   const secrets = readEnvFile(['ANTHROPIC_API_KEY']);
-  return secrets.ANTHROPIC_API_KEY ? 'api-key' : 'oauth';
+  return secrets.ANTHROPIC_API_KEY || readClaudeJsonApiKey() ? 'api-key' : 'oauth';
 }

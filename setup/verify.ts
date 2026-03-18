@@ -105,6 +105,13 @@ export async function run(_args: string[]): Promise<void> {
       credentials = 'configured';
     }
   }
+  // Fallback: check ~/.claude.json for primaryApiKey (console/platform login)
+  if (credentials === 'missing') {
+    try {
+      const claudeJson = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.claude.json'), 'utf-8'));
+      if (claudeJson.primaryApiKey) credentials = 'configured';
+    } catch { /* ignore */ }
+  }
 
   // 4. Check channel auth (detect configured channels by credentials)
   const envVars = readEnvFile([
