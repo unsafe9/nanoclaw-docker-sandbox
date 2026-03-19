@@ -149,5 +149,7 @@ export function startCredentialProxy(
 /** Detect which auth mode the host is configured for. */
 export function detectAuthMode(): AuthMode {
   const secrets = readEnvFile(['ANTHROPIC_API_KEY']);
-  return secrets.ANTHROPIC_API_KEY || readClaudeJsonApiKey() ? 'api-key' : 'oauth';
+  return secrets.ANTHROPIC_API_KEY || readClaudeJsonApiKey()
+    ? 'api-key'
+    : 'oauth';
 }

@@ -9,5 +9,8 @@
 
 // telegram
 
-// whatsapp
-import './whatsapp.js';
+// tui
+import './tui.js';
+
+// whatsapp (disabled — enable after running /add-whatsapp)
+// import './whatsapp.js';

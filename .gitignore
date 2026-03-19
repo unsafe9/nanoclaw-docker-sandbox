@@ -37,3 +37,7 @@ groups/global/*
 
 agents-sdk-docs
 nanoclaw.pid
+
+# TUI binaries
+tui/nanoclaw-tui
+tui/mock-server
